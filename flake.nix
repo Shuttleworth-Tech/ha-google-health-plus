@@ -17,7 +17,7 @@
       devShells = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          python = pkgs.python313.withPackages (ps: [
+          python = pkgs.python314.withPackages (ps: [
             ps.pip
             ps.setuptools
             ps.wheel
