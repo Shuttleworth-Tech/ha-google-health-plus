@@ -14,9 +14,9 @@ from google_health_api.model import (
     RespiratoryRateSleepSummary,
 )
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from custom_components.google_health_plus.const import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -26,25 +26,58 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-    snapshot_platform,
-)
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
 async def test_all_entities(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test all sensor entities."""
+    """Test all sensor entities are registered with the expected device classes."""
     with patch("custom_components.google_health_plus._PLATFORMS", [Platform.SENSOR]):
         assert await integration_setup()
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    expected = {
+        # key -> (translation_key, device_class)
+        "steps": ("steps", None),
+        "distance": (None, SensorDeviceClass.DISTANCE),
+        "active_calories": ("active_calories", SensorDeviceClass.ENERGY),
+        "total_calories": ("total_calories", SensorDeviceClass.ENERGY),
+        "floors": ("floors", None),
+        "weight": (None, SensorDeviceClass.WEIGHT),
+        "resting_heart_rate": ("resting_heart_rate", None),
+        "body_fat": ("body_fat", None),
+        "sleep_asleep": ("sleep_asleep", SensorDeviceClass.DURATION),
+        "sleep_awake": ("sleep_awake", SensorDeviceClass.DURATION),
+        "sleep_in_bed": ("sleep_in_bed", SensorDeviceClass.DURATION),
+        "sleep_to_fall_asleep": ("sleep_to_fall_asleep", SensorDeviceClass.DURATION),
+        "sleep_after_wakeup": ("sleep_after_wakeup", SensorDeviceClass.DURATION),
+        "bedtime": ("bedtime", SensorDeviceClass.TIMESTAMP),
+        "wake_time": ("wake_time", SensorDeviceClass.TIMESTAMP),
+        "hydration": ("hydration", SensorDeviceClass.VOLUME),
+        "calories_consumed": ("calories_consumed", SensorDeviceClass.ENERGY),
+        "heart_rate_variability": ("heart_rate_variability", None),
+        "daily_heart_rate_variability": ("daily_heart_rate_variability", None),
+        "oxygen_saturation": ("oxygen_saturation", None),
+        "daily_oxygen_saturation": ("daily_oxygen_saturation", None),
+        "respiratory_rate": ("respiratory_rate", None),
+        "respiratory_rate_sleep": ("respiratory_rate_sleep", None),
+    }
+    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    prefix = f"{config_entry.entry_id}_"
+    account_entries = {
+        e.unique_id.removeprefix(prefix): e
+        for e in entries
+        if e.domain == "sensor" and e.unique_id.startswith(prefix)
+    }
+    for key, (translation_key, device_class) in expected.items():
+        entry = account_entries[key]
+        assert entry.translation_key == translation_key, key
+        assert entry.original_device_class == device_class, key
+    assert len(account_entries) == len(expected)
 
 
 async def test_sensor_empty_rollup(

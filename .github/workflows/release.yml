@@ -45,6 +45,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          nix develop -c gh release create "${GITHUB_REF_NAME}" google_health_plus.zip \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes
+          nix develop -c bash -c 'gh release create "${GITHUB_REF_NAME}" "${GITHUB_WORKSPACE}/google_health_plus.zip" --title "${GITHUB_REF_NAME}" --generate-notes'

@@ -103,9 +103,10 @@ that don't apply. Everything runs from the repo root
   a scope outside `OAUTH_SCOPES` in `const.py`, the user must re-auth.
 - ECG / irregular-rhythm-notification need clinical scopes we deliberately do
   not request — do not add them.
-- If CI snapshot tests fail with "Snapshot does not exist", check that the
-  venv-prepare step and the test step are separate workflow steps (see git
-  history around 2026-08-13); do not merge them back into one step.
+- Syrupy snapshot tests were replaced with literal assertions on 2026-08-13
+  after intermittent "Snapshot does not exist" failures on GitHub runners
+  (never reproduced locally). Do not reintroduce snapshot assertions without
+  solving that; extend the literal dicts in tests/ instead.
 - Release zip layout: integration FILES at the zip root (manifest.json, ...).
   HACS extracts into `/config/custom_components/<domain>/` directly — any
   wrapping folder in the zip doubles the nesting and HA never finds the

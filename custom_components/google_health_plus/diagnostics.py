@@ -52,9 +52,25 @@ async def async_get_config_entry_diagnostics(
             "sleep": sleep_data.sleep is not None,
         }
 
+    metrics_diagnostics = None
+    if (metrics_coordinator := data.metrics_coordinator) is not None:
+        metrics_data = metrics_coordinator.data
+        metrics_diagnostics = {
+            "last_update_success": metrics_coordinator.last_update_success,
+            "heart_rate_variability": metrics_data.heart_rate_variability is not None,
+            "daily_heart_rate_variability": metrics_data.daily_heart_rate_variability
+            is not None,
+            "oxygen_saturation": metrics_data.oxygen_saturation is not None,
+            "daily_oxygen_saturation": metrics_data.daily_oxygen_saturation is not None,
+            "daily_respiratory_rate": metrics_data.daily_respiratory_rate is not None,
+            "respiratory_rate_sleep_summary": metrics_data.respiratory_rate_sleep_summary
+            is not None,
+        }
+
     return {
         "config_entry": async_redact_data(dict(entry.data), TO_REDACT),
         "activity_coordinator": activity_diagnostics,
         "body_coordinator": body_diagnostics,
+        "metrics_coordinator": metrics_diagnostics,
         "sleep_coordinator": sleep_diagnostics,
     }
