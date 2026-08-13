@@ -1,5 +1,8 @@
 name: CI
 
+# No external actions are used in this workflow (org Actions policy is
+# local_only); checkout is done with plain git and the workflow token.
+
 on:
   push:
     branches: [main]
@@ -9,34 +12,33 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+      - name: Check out
+        run: |
+          git init -q .
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth 1 origin "${GITHUB_SHA}"
+          git checkout -q FETCH_HEAD
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Install ruff
-        run: pip install ruff==0.14.6
+        run: python3 -m pip install --user ruff==0.14.6
       - name: Ruff lint
-        run: ruff check custom_components tests
+        run: python3 -m ruff check custom_components tests
       - name: Ruff format
-        run: ruff format --check custom_components tests
+        run: python3 -m ruff format --check custom_components tests
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
+      - name: Check out
+        run: |
+          git init -q .
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth 1 origin "${GITHUB_SHA}"
+          git checkout -q FETCH_HEAD
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Install dependencies
-        run: pip install -r requirements_test.txt
+        run: python3 -m pip install --user -r requirements_test.txt
       - name: Run tests
-        run: pytest -vv
-
-  hassfest:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Hassfest validate
-        uses: home-assistant/actions/hassfest@master
-        with:
-          path: custom_components
+        run: python3 -m pytest -vv
