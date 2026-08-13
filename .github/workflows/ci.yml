@@ -12,8 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3.21.9
+      - name: Cache Python venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('requirements_test.txt') }}
       - name: Ruff lint and format check
-        run: nix shell nixpkgs#ruff --command bash -c 'ruff check custom_components tests && ruff format --check custom_components tests'
+        run: |
+          nix develop -c bash -c '
+            if [ ! -x .venv/bin/ruff ]; then
+              python3 -m venv .venv
+              ./.venv/bin/pip install -q -r requirements_test.txt
+            fi
+            ./.venv/bin/ruff check custom_components tests
+            ./.venv/bin/ruff format --check custom_components tests
+          '
 
   test:
     runs-on: ubuntu-latest
@@ -25,6 +38,8 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('requirements_test.txt') }}
+      - name: Debug snapshot paths
+        run: ls -la tests/snapshots/ && head -3 tests/snapshots/test_diagnostics.ambr
       - name: Run tests
         run: |
           nix develop -c bash -c '
