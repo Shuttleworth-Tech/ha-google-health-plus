@@ -106,3 +106,7 @@ that don't apply. Everything runs from the repo root
 - If CI snapshot tests fail with "Snapshot does not exist", check that the
   venv-prepare step and the test step are separate workflow steps (see git
   history around 2026-08-13); do not merge them back into one step.
+- Release zip layout: integration FILES at the zip root (manifest.json, ...).
+  HACS extracts into `/config/custom_components/<domain>/` directly — any
+  wrapping folder in the zip doubles the nesting and HA never finds the
+  manifest (learned the hard way across v0.1.0-v0.1.2).
