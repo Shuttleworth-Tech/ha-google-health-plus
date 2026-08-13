@@ -40,7 +40,7 @@ jobs:
       - name: Build zip
         run: |
           find custom_components -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
-          nix develop -c bash -c 'cd custom_components/google_health_plus && zip -r ../../../google_health_plus.zip .'
+          nix develop -c bash -c 'cd custom_components/google_health_plus && zip -r "$GITHUB_WORKSPACE/google_health_plus.zip" .'
       - name: Create release with zip asset
         env:
           GH_TOKEN: ${{ github.token }}
