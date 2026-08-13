@@ -1,0 +1,123 @@
+{
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Health data. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured",
+      "already_in_progress": "This is already being configured. Finish the existing configuration before starting again.",
+      "api_not_enabled": "The Google Health API is not enabled for your Google Cloud project. Enable it in the [Google Cloud Console]({url}), wait a few minutes for the change to propagate, then try again.",
+      "authorize_url_timeout": "Timeout while generating an authorization URL.",
+      "cannot_connect": "Failed to connect.",
+      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "missing_profile_scope": "Missing required Google Health profile read permission.",
+      "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+      "oauth_error": "Received invalid token data.",
+      "oauth_failed": "Error while obtaining access token.",
+      "oauth_implementation_unavailable": "No OAuth2 implementations are currently available.",
+      "oauth_timeout": "Timeout while resolving the OAuth token.",
+      "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
+      "user_rejected_authorize": "Account linking rejected: {error}",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
+    },
+    "create_entry": {
+      "default": "Successfully authenticated"
+    },
+    "step": {
+      "pick_implementation": {
+        "title": "Pick authentication method"
+      },
+      "reauth_confirm": {
+        "description": "The Google Health Plus integration needs to re-authenticate your account",
+        "title": "Authentication expired for {name}"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_calories": {
+        "name": "Active calories"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "calories_consumed": {
+        "name": "Calories consumed"
+      },
+      "floors": {
+        "name": "Floors"
+      },
+      "hydration": {
+        "name": "Water intake"
+      },
+      "last_sync_time": {
+        "name": "Last sync time"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
+      "sleep_after_wakeup": {
+        "name": "Time after waking up"
+      },
+      "sleep_asleep": {
+        "name": "Time asleep"
+      },
+      "sleep_awake": {
+        "name": "Time awake"
+      },
+      "sleep_in_bed": {
+        "name": "Time in bed"
+      },
+      "sleep_to_fall_asleep": {
+        "name": "Time to fall asleep"
+      },
+      "steps": {
+        "name": "Steps",
+        "unit_of_measurement": "steps"
+      },
+      "total_calories": {
+        "name": "Total calories"
+      },
+      "bedtime": {
+        "name": "Bedtime"
+      },
+      "daily_heart_rate_variability": {
+        "name": "Daily heart rate variability"
+      },
+      "daily_oxygen_saturation": {
+        "name": "Daily oxygen saturation"
+      },
+      "heart_rate_variability": {
+        "name": "Heart rate variability"
+      },
+      "oxygen_saturation": {
+        "name": "Oxygen saturation"
+      },
+      "respiratory_rate": {
+        "name": "Respiratory rate"
+      },
+      "respiratory_rate_sleep": {
+        "name": "Sleep respiratory rate"
+      },
+      "wake_time": {
+        "name": "Wake time"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication or permission error talking to Google Health."
+    },
+    "communication_error": {
+      "message": "Error communicating with Google Health."
+    },
+    "missing_profile_scope": {
+      "message": "Missing required Google Health profile read permission."
+    },
+    "oauth_error": {
+      "message": "OAuth2 implementation temporarily unavailable."
+    }
+  }
+}

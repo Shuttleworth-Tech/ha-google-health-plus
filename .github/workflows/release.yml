@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -r requirements_test.txt
+      - name: Run tests
+        run: pytest -vv
+      - name: Validate manifest version matches tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(python3 -c "import json; print(json.load(open('custom_components/google_health_plus/manifest.json'))['version'])")
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "manifest version $VERSION does not match tag $TAG"
+            exit 1
+          fi
+      - name: Build zip
+        run: |
+          cd custom_components
+          zip -r ../google_health_plus.zip google_health_plus
+          cd ..
+      - name: Create release with zip asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" google_health_plus.zip \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes

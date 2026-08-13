@@ -1,0 +1,4 @@
+homeassistant==2026.8.1
+pytest-homeassistant-custom-component==0.13.355
+google-health-api==0.8.0
+ruff==0.14.6

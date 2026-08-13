@@ -1,0 +1,13 @@
+{
+  "domain": "google_health_plus",
+  "name": "Google Health Plus",
+  "codeowners": ["@Aurelian-Shuttleworth"],
+  "version": "0.1.0",
+  "config_flow": true,
+  "dependencies": ["application_credentials", "http", "webhook"],
+  "documentation": "https://github.com/Shuttleworth-Tech/ha-google-health-plus",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["google-health-api==0.8.0"]
+}
