@@ -19,15 +19,16 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('requirements_test.txt') }}
-      - name: Run tests
+      - name: Prepare venv
         run: |
           nix develop -c bash -c '
             if [ ! -x .venv/bin/pytest ]; then
               python3 -m venv .venv
               ./.venv/bin/pip install -q -r requirements_test.txt
             fi
-            ./.venv/bin/pytest -vv
           '
+      - name: Run tests
+        run: nix develop -c bash -c './.venv/bin/pytest -vv'
       - name: Validate manifest version matches tag
         run: |
           TAG="${GITHUB_REF_NAME#v}"

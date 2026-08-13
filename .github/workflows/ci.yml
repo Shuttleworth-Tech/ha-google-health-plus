@@ -17,13 +17,17 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('requirements_test.txt') }}
-      - name: Ruff lint and format check
+      - name: Prepare venv
         run: |
           nix develop -c bash -c '
             if [ ! -x .venv/bin/ruff ]; then
               python3 -m venv .venv
               ./.venv/bin/pip install -q -r requirements_test.txt
             fi
+          '
+      - name: Ruff lint and format check
+        run: |
+          nix develop -c bash -c '
             ./.venv/bin/ruff check custom_components tests
             ./.venv/bin/ruff format --check custom_components tests
           '
@@ -38,7 +42,7 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('requirements_test.txt') }}
-      - name: Prepare venv (inside nix develop)
+      - name: Prepare venv
         run: |
           nix develop -c bash -c '
             if [ ! -x .venv/bin/pytest ]; then
@@ -46,23 +50,5 @@ jobs:
               ./.venv/bin/pip install -q -r requirements_test.txt
             fi
           '
-      - name: Bisect - plain venv, no nix wrapper
-        run: ./.venv/bin/pytest -q
-      - name: Bisect - inside nix develop
-        continue-on-error: true
-        run: |
-          nix develop -c bash -c '
-            ./.venv/bin/pytest tests/test_diagnostics.py -q
-            echo "NIX_WRAPPED_TESTS_OK"
-          '
-          echo "nix-wrapped test result: $?"
-      - name: Probe - where does syrupy write on --snapshot-update
-        if: always()
-        run: |
-          nix develop -c bash -c '
-            ./.venv/bin/pytest tests/test_diagnostics.py -q --snapshot-update
-            echo "--- ambr files modified recently:"
-            find / -name "*.ambr" -mmin -5 2>/dev/null | grep -v "^/proc" || echo none
-            echo "--- workspace git diff:"
-            git status --short
-          '
+      - name: Run tests
+        run: nix develop -c bash -c './.venv/bin/pytest -vv'
