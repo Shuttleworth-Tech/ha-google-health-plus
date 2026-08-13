@@ -38,21 +38,31 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('requirements_test.txt') }}
-      - name: Debug snapshot paths
-        run: ls -la tests/snapshots/ && head -3 tests/snapshots/test_diagnostics.ambr
-      - name: Run tests
+      - name: Prepare venv (inside nix develop)
         run: |
           nix develop -c bash -c '
             if [ ! -x .venv/bin/pytest ]; then
               python3 -m venv .venv
               ./.venv/bin/pip install -q -r requirements_test.txt
             fi
-            pwd
-            ls -la tests/snapshots/ || echo "NO SNAPSHOTS DIR"
-            ./.venv/bin/pytest tests/test_diagnostics.py::test_diagnostics_full_data -q --snapshot-update
-            echo '--- ambr files modified in last 5 min:'
-            find / -name '*.ambr' -mmin -5 2>/dev/null | grep -v proc || echo none
-            echo '--- diff of workspace snapshots:'
-            git status --short || true
-            git diff -- tests/snapshots/ | head -40 || true
+          '
+      - name: Bisect - plain venv, no nix wrapper
+        run: ./.venv/bin/pytest -q
+      - name: Bisect - inside nix develop
+        continue-on-error: true
+        run: |
+          nix develop -c bash -c '
+            ./.venv/bin/pytest tests/test_diagnostics.py -q
+            echo "NIX_WRAPPED_TESTS_OK"
+          '
+          echo "nix-wrapped test result: $?"
+      - name: Probe - where does syrupy write on --snapshot-update
+        if: always()
+        run: |
+          nix develop -c bash -c '
+            ./.venv/bin/pytest tests/test_diagnostics.py -q --snapshot-update
+            echo "--- ambr files modified recently:"
+            find / -name "*.ambr" -mmin -5 2>/dev/null | grep -v "^/proc" || echo none
+            echo "--- workspace git diff:"
+            git status --short
           '
