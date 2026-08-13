@@ -48,6 +48,11 @@ jobs:
               ./.venv/bin/pip install -q -r requirements_test.txt
             fi
             pwd
-            find . -name '*.ambr' -not -path './.venv/*'
-            ./.venv/bin/pytest tests/test_diagnostics.py::test_diagnostics_full_data -vv --snapshot-details 2>&1 | head -60
+            ls -la tests/snapshots/ || echo "NO SNAPSHOTS DIR"
+            ./.venv/bin/pytest tests/test_diagnostics.py::test_diagnostics_full_data -q --snapshot-update
+            echo '--- ambr files modified in last 5 min:'
+            find / -name '*.ambr' -mmin -5 2>/dev/null | grep -v proc || echo none
+            echo '--- diff of workspace snapshots:'
+            git status --short || true
+            git diff -- tests/snapshots/ | head -40 || true
           '
