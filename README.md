@@ -46,6 +46,11 @@ are `sensor.aurelian_plus_*`:
 | `sleep_respiratory_rate` | Sleep respiratory rate (full-sleep stats) | breaths/min |
 | `bedtime` | Sleep session start | timestamp |
 | `wake_time` | Sleep session end | timestamp |
+| `time_in_fat_burn_zone` / `_cardio_` / `_peak_` | Minutes in each HR zone today | min |
+| `calories_in_fat_burn_zone` / `_cardio_` / `_peak_` | kcal burned in each HR zone today | kcal |
+| `fat_burn_zone_min_heart_rate` / `_cardio_` / `_peak_` | Zone BPM thresholds (Karvonen) | bpm |
+| `sleep_skin_temperature` | Nightly skin temperature | °C |
+| `sleep_skin_temperature_deviation` | Skin temp vs 30-day baseline (recovery signal) | °C |
 
 Plus the full official sensor set (steps, distance, calories, floors, weight,
 resting heart rate, body fat, sleep durations, hydration, nutrition, paired

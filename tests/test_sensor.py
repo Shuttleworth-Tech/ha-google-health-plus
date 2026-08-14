@@ -65,6 +65,32 @@ async def test_all_entities(
         "daily_oxygen_saturation": ("daily_oxygen_saturation", None),
         "respiratory_rate": ("respiratory_rate", None),
         "respiratory_rate_sleep": ("respiratory_rate_sleep", None),
+        "time_in_fat_burn_zone": (
+            "time_in_fat_burn_zone",
+            SensorDeviceClass.DURATION,
+        ),
+        "time_in_cardio_zone": ("time_in_cardio_zone", SensorDeviceClass.DURATION),
+        "time_in_peak_zone": ("time_in_peak_zone", SensorDeviceClass.DURATION),
+        "calories_in_fat_burn_zone": (
+            "calories_in_fat_burn_zone",
+            SensorDeviceClass.ENERGY,
+        ),
+        "calories_in_cardio_zone": (
+            "calories_in_cardio_zone",
+            SensorDeviceClass.ENERGY,
+        ),
+        "calories_in_peak_zone": ("calories_in_peak_zone", SensorDeviceClass.ENERGY),
+        "fat_burn_zone_min_heart_rate": ("fat_burn_zone_min_heart_rate", None),
+        "cardio_zone_min_heart_rate": ("cardio_zone_min_heart_rate", None),
+        "peak_zone_min_heart_rate": ("peak_zone_min_heart_rate", None),
+        "sleep_skin_temperature": (
+            "sleep_skin_temperature",
+            SensorDeviceClass.TEMPERATURE,
+        ),
+        "sleep_skin_temperature_deviation": (
+            "sleep_skin_temperature_deviation",
+            SensorDeviceClass.TEMPERATURE,
+        ),
     }
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     prefix = f"{config_entry.entry_id}_"
@@ -317,3 +343,50 @@ async def test_sleep_timestamp_sensors(
     wake_time = hass.states.get("sensor.google_health_plus_wake_time")
     assert wake_time is not None
     assert wake_time.state == "2026-06-30T06:00:00+00:00"
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_hr_zone_sensors(
+    hass: HomeAssistant,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test heart rate zone time, calorie, and threshold sensors."""
+    assert await integration_setup()
+
+    expected = {
+        "sensor.google_health_plus_time_in_fat_burn_zone": ("80.0", "min"),
+        "sensor.google_health_plus_time_in_cardio_zone": ("25.0", "min"),
+        "sensor.google_health_plus_time_in_peak_zone": ("5.0", "min"),
+        "sensor.google_health_plus_calories_in_fat_burn_zone": ("210.5", "kcal"),
+        "sensor.google_health_plus_calories_in_cardio_zone": ("95.25", "kcal"),
+        "sensor.google_health_plus_calories_in_peak_zone": ("30.0", "kcal"),
+        "sensor.google_health_plus_fat_burn_zone_minimum_heart_rate": ("91", "bpm"),
+        "sensor.google_health_plus_cardio_zone_minimum_heart_rate": ("127", "bpm"),
+        "sensor.google_health_plus_peak_zone_minimum_heart_rate": ("154", "bpm"),
+    }
+    for entity_id, (expected_state, expected_unit) in expected.items():
+        state = hass.states.get(entity_id)
+        assert state is not None, entity_id
+        assert state.state == expected_state, entity_id
+        assert state.attributes.get("unit_of_measurement") == expected_unit, entity_id
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_sleep_temperature_sensors(
+    hass: HomeAssistant,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test sleep skin temperature and deviation sensors."""
+    assert await integration_setup()
+
+    temp = hass.states.get("sensor.google_health_plus_sleep_skin_temperature")
+    assert temp is not None
+    assert temp.state == "34.42"
+    assert temp.attributes.get("unit_of_measurement") == "°C"
+
+    deviation = hass.states.get(
+        "sensor.google_health_plus_sleep_skin_temperature_deviation"
+    )
+    assert deviation is not None
+    assert float(deviation.state) == pytest.approx(34.42 - 34.1)
+    assert deviation.attributes.get("unit_of_measurement") == "°C"

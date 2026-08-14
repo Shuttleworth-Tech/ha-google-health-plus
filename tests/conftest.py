@@ -7,8 +7,12 @@ from unittest.mock import AsyncMock, patch
 
 from google_health_api.model import (
     BODY_FAT,
+    DAILY_HEART_RATE_ZONES,
     DAILY_RESTING_HEART_RATE,
+    DAILY_SLEEP_TEMPERATURE_DERIVATIONS,
     SLEEP,
+    CaloriesInHeartRateZoneRollupValue,
+    TimeInHeartRateZoneRollupValue,
     WEIGHT,
     ActiveEnergyBurnedRollupValue,
     DailyRollupDataPoint,
@@ -167,6 +171,18 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.floors.today.return_value = _rollup_fixture(
             "floors.json", FloorsRollupValue, "floors"
         )
+        client.time_in_heart_rate_zone = AsyncMock()
+        client.time_in_heart_rate_zone.today.return_value = _rollup_fixture(
+            "time_in_heart_rate_zone.json",
+            TimeInHeartRateZoneRollupValue,
+            "timeInHeartRateZone",
+        )
+        client.calories_in_heart_rate_zone = AsyncMock()
+        client.calories_in_heart_rate_zone.today.return_value = _rollup_fixture(
+            "calories_in_heart_rate_zone.json",
+            CaloriesInHeartRateZoneRollupValue,
+            "caloriesInHeartRateZone",
+        )
         client.hydration_log = AsyncMock()
         client.hydration_log.today.return_value = _rollup_fixture(
             "hydration.json", HydrationLogRollupValue, "hydrationLog"
@@ -189,6 +205,10 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         )
         client.body_fat = AsyncMock()
         client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
+        client.daily_heart_rate_zones = AsyncMock()
+        client.daily_heart_rate_zones.list.return_value = _list_fixture(
+            "daily_heart_rate_zones.json", DAILY_HEART_RATE_ZONES
+        )
         client.paired_devices = AsyncMock()
         client.paired_devices.list.return_value = _paired_devices_fixture(
             "paired_devices.json"
@@ -198,6 +218,11 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         ]
         client.sleep = AsyncMock()
         client.sleep.list.return_value = _list_fixture("sleep.json", SLEEP)
+        client.daily_sleep_temperature_derivations = AsyncMock()
+        client.daily_sleep_temperature_derivations.list.return_value = _list_fixture(
+            "daily_sleep_temperature_derivations.json",
+            DAILY_SLEEP_TEMPERATURE_DERIVATIONS,
+        )
         client.sleep.required_read_scopes = [
             "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
         ]

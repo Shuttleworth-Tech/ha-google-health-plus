@@ -1,0 +1,22 @@
+{
+  "rollupDataPoints": [
+    {
+      "timeInHeartRateZone": {
+        "timeInHeartRateZones": [
+          {
+            "heartRateZone": "FAT_BURN",
+            "duration": "4800s"
+          },
+          {
+            "heartRateZone": "CARDIO",
+            "duration": "1500s"
+          },
+          {
+            "heartRateZone": "PEAK",
+            "duration": "300s"
+          }
+        ]
+      }
+    }
+  ]
+}

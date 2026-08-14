@@ -1,0 +1,27 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/daily-heart-rate-zones/dataPoints/1",
+      "dailyHeartRateZones": {
+        "date": { "year": 2026, "month": 8, "day": 13 },
+        "heartRateZones": [
+          {
+            "heartRateZoneType": "FAT_BURN",
+            "minBeatsPerMinute": 91,
+            "maxBeatsPerMinute": 127
+          },
+          {
+            "heartRateZoneType": "CARDIO",
+            "minBeatsPerMinute": 127,
+            "maxBeatsPerMinute": 154
+          },
+          {
+            "heartRateZoneType": "PEAK",
+            "minBeatsPerMinute": 154,
+            "maxBeatsPerMinute": 220
+          }
+        ]
+      }
+    }
+  ]
+}

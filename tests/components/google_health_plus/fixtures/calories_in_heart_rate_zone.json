@@ -1,0 +1,22 @@
+{
+  "rollupDataPoints": [
+    {
+      "caloriesInHeartRateZone": {
+        "caloriesInHeartRateZones": [
+          {
+            "heartRateZone": "FAT_BURN",
+            "kcal": 210.5
+          },
+          {
+            "heartRateZone": "CARDIO",
+            "kcal": 95.25
+          },
+          {
+            "heartRateZone": "PEAK",
+            "kcal": 30.0
+          }
+        ]
+      }
+    }
+  ]
+}

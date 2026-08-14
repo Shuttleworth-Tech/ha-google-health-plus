@@ -103,6 +103,39 @@
       },
       "wake_time": {
         "name": "Wake time"
+      },
+      "time_in_fat_burn_zone": {
+        "name": "Time in fat burn zone"
+      },
+      "time_in_cardio_zone": {
+        "name": "Time in cardio zone"
+      },
+      "time_in_peak_zone": {
+        "name": "Time in peak zone"
+      },
+      "calories_in_fat_burn_zone": {
+        "name": "Calories in fat burn zone"
+      },
+      "calories_in_cardio_zone": {
+        "name": "Calories in cardio zone"
+      },
+      "calories_in_peak_zone": {
+        "name": "Calories in peak zone"
+      },
+      "fat_burn_zone_min_heart_rate": {
+        "name": "Fat burn zone minimum heart rate"
+      },
+      "cardio_zone_min_heart_rate": {
+        "name": "Cardio zone minimum heart rate"
+      },
+      "peak_zone_min_heart_rate": {
+        "name": "Peak zone minimum heart rate"
+      },
+      "sleep_skin_temperature": {
+        "name": "Sleep skin temperature"
+      },
+      "sleep_skin_temperature_deviation": {
+        "name": "Sleep skin temperature deviation"
       }
     }
   },

@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
+    UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
 )
@@ -48,6 +49,51 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
+
+
+def _parse_duration_seconds(duration: str | None) -> float | None:
+    """Parse a Google Duration string like '3.5s' into seconds."""
+    if not duration:
+        return None
+    try:
+        return float(duration.removesuffix("s"))
+    except ValueError:
+        return None
+
+
+def _time_in_zone(data: Any, zone: str) -> float | None:
+    """Return minutes spent in a heart rate zone from today's rollup."""
+    if not data or not data.time_in_heart_rate_zones:
+        return None
+    for entry in data.time_in_heart_rate_zones.time_in_heart_rate_zones:
+        if entry.heart_rate_zone == zone:
+            seconds = _parse_duration_seconds(entry.duration)
+            return seconds / 60.0 if seconds is not None else None
+    return None
+
+
+def _zone_threshold(data: Any, zone: str, bound: str) -> float | None:
+    """Return a min/max bpm threshold for a heart rate zone."""
+    if not data or not data.heart_rate_zones:
+        return None
+    for entry in data.heart_rate_zones.heart_rate_zones:
+        if entry.heart_rate_zone_type == zone:
+            return (
+                entry.min_beats_per_minute
+                if bound == "min"
+                else entry.max_beats_per_minute
+            )
+    return None
+
+
+def _calories_in_zone(data: Any, zone: str) -> float | None:
+    """Return kcal burned in a heart rate zone from today's rollup."""
+    if not data or not data.calories_in_heart_rate_zones:
+        return None
+    for entry in data.calories_in_heart_rate_zones.calories_in_heart_rate_zones:
+        if entry.heart_rate_zone == zone:
+            return entry.kcal
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -112,6 +158,60 @@ ACTIVITY_SENSORS: list[
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.floors.count_sum if data and data.floors else 0,
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float | None](
+        key="time_in_fat_burn_zone",
+        translation_key="time_in_fat_burn_zone",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart",
+        value_fn=lambda data: _time_in_zone(data, "FAT_BURN"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float | None](
+        key="time_in_cardio_zone",
+        translation_key="time_in_cardio_zone",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart-flash",
+        value_fn=lambda data: _time_in_zone(data, "CARDIO"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float | None](
+        key="time_in_peak_zone",
+        translation_key="time_in_peak_zone",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart-flash",
+        value_fn=lambda data: _time_in_zone(data, "PEAK"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float | None](
+        key="calories_in_fat_burn_zone",
+        translation_key="calories_in_fat_burn_zone",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:fire",
+        value_fn=lambda data: _calories_in_zone(data, "FAT_BURN"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float | None](
+        key="calories_in_cardio_zone",
+        translation_key="calories_in_cardio_zone",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:fire",
+        value_fn=lambda data: _calories_in_zone(data, "CARDIO"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float | None](
+        key="calories_in_peak_zone",
+        translation_key="calories_in_peak_zone",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:fire",
+        value_fn=lambda data: _calories_in_zone(data, "PEAK"),
+    ),
 ]
 
 BODY_SENSORS: list[
@@ -148,6 +248,33 @@ BODY_SENSORS: list[
         value_fn=lambda data: (
             data.body_fat.percentage if data and data.body_fat else None
         ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="fat_burn_zone_min_heart_rate",
+        translation_key="fat_burn_zone_min_heart_rate",
+        native_unit_of_measurement="bpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: _zone_threshold(data, "FAT_BURN", "min"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="cardio_zone_min_heart_rate",
+        translation_key="cardio_zone_min_heart_rate",
+        native_unit_of_measurement="bpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: _zone_threshold(data, "CARDIO", "min"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="peak_zone_min_heart_rate",
+        translation_key="peak_zone_min_heart_rate",
+        native_unit_of_measurement="bpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: _zone_threshold(data, "PEAK", "min"),
     ),
 ]
 
@@ -234,6 +361,34 @@ SLEEP_SENSORS: list[
             and data.sleep
             and data.sleep.interval
             and data.sleep.interval.end_time
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, float | None](
+        key="sleep_skin_temperature",
+        translation_key="sleep_skin_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.sleep_temperature.nightly_temperature_celsius
+            if data and data.sleep_temperature
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, float | None](
+        key="sleep_skin_temperature_deviation",
+        translation_key="sleep_skin_temperature_deviation",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:thermometer-lines",
+        value_fn=lambda data: (
+            data.sleep_temperature.nightly_temperature_celsius
+            - data.sleep_temperature.baseline_temperature_celsius
+            if data
+            and data.sleep_temperature
+            and data.sleep_temperature.baseline_temperature_celsius is not None
             else None
         ),
     ),

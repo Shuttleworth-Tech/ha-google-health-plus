@@ -15,10 +15,13 @@ from google_health_api.exceptions import (
 from google_health_api.model import (
     ActiveEnergyBurnedRollupValue,
     BodyFat,
+    CaloriesInHeartRateZoneRollupValue,
     DailyHeartRateVariability,
+    DailyHeartRateZones,
     DailyOxygenSaturation,
     DailyRespiratoryRate,
     DailyRestingHeartRate,
+    DailySleepTemperatureDerivations,
     DistanceRollupValue,
     FloorsRollupValue,
     HeartRateVariability,
@@ -29,6 +32,7 @@ from google_health_api.model import (
     RespiratoryRateSleepSummary,
     Sleep,
     StepsRollupValue,
+    TimeInHeartRateZoneRollupValue,
     TotalCaloriesRollupValue,
     Weight,
 )
@@ -59,6 +63,8 @@ class GoogleHealthActivityData:
     active_energy_burned: ActiveEnergyBurnedRollupValue | None = None
     total_calories: TotalCaloriesRollupValue | None = None
     floors: FloorsRollupValue | None = None
+    time_in_heart_rate_zones: TimeInHeartRateZoneRollupValue | None = None
+    calories_in_heart_rate_zones: CaloriesInHeartRateZoneRollupValue | None = None
 
 
 @dataclass
@@ -68,6 +74,7 @@ class GoogleHealthBodyData:
     weight: Weight | None = None
     resting_heart_rate: DailyRestingHeartRate | None = None
     body_fat: BodyFat | None = None
+    heart_rate_zones: DailyHeartRateZones | None = None
 
 
 class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -149,12 +156,16 @@ class GoogleHealthActivityCoordinator(
             active_energy_rollup,
             total_calories_rollup,
             floors_rollup,
+            time_in_zone_rollup,
+            calories_in_zone_rollup,
         ) = await asyncio.gather(
             self.api.steps.today(self.hass.config.time_zone),
             self.api.distance.today(self.hass.config.time_zone),
             self.api.active_energy_burned.today(self.hass.config.time_zone),
             self.api.total_calories.today(self.hass.config.time_zone),
             self.api.floors.today(self.hass.config.time_zone),
+            self.api.time_in_heart_rate_zone.today(self.hass.config.time_zone),
+            self.api.calories_in_heart_rate_zone.today(self.hass.config.time_zone),
         )
 
         steps = steps_rollup.data if steps_rollup else None
@@ -171,6 +182,12 @@ class GoogleHealthActivityCoordinator(
             active_energy_burned=active_energy_burned,
             total_calories=total_calories,
             floors=floors,
+            time_in_heart_rate_zones=time_in_zone_rollup.data
+            if time_in_zone_rollup
+            else None,
+            calories_in_heart_rate_zones=calories_in_zone_rollup.data
+            if calories_in_zone_rollup
+            else None,
         )
 
 
@@ -201,10 +218,11 @@ class GoogleHealthBodyCoordinator(
         # The Google Health API returns data points sorted by interval start time
         # in descending order (newest first). Querying with page_size=1 and grabbing
         # the first element is sufficient to fetch the most recent measurement.
-        weight_result, hr_result, body_fat_result = await asyncio.gather(
+        weight_result, hr_result, body_fat_result, zones_result = await asyncio.gather(
             self.api.weight.list(page_size=DEFAULT_PAGE_SIZE),
             self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE),
             self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE),
+            self.api.daily_heart_rate_zones.list(page_size=DEFAULT_PAGE_SIZE),
         )
 
         weight = (
@@ -217,10 +235,14 @@ class GoogleHealthBodyCoordinator(
             body_fat_result.data_points[0].data if body_fat_result.data_points else None
         )
 
+        heart_rate_zones = (
+            zones_result.data_points[0].data if zones_result.data_points else None
+        )
         return GoogleHealthBodyData(
             weight=weight,
             resting_heart_rate=resting_heart_rate,
             body_fat=body_fat,
+            heart_rate_zones=heart_rate_zones,
         )
 
 
@@ -345,6 +367,7 @@ class GoogleHealthSleepData:
     """Class to hold sleep data."""
 
     sleep: Sleep | None = None
+    sleep_temperature: DailySleepTemperatureDerivations | None = None
 
 
 class GoogleHealthSleepCoordinator(
@@ -370,10 +393,18 @@ class GoogleHealthSleepCoordinator(
 
     @override
     async def _async_fetch_data(self) -> GoogleHealthSleepData:
-        """Fetch latest sleep session."""
-        sleep_result = await self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE)
+        """Fetch latest sleep session and sleep temperature derivation."""
+        sleep_result, temp_result = await asyncio.gather(
+            self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE),
+            self.api.daily_sleep_temperature_derivations.list(
+                page_size=DEFAULT_PAGE_SIZE
+            ),
+        )
         sleep = sleep_result.data_points[0].data if sleep_result.data_points else None
-        return GoogleHealthSleepData(sleep=sleep)
+        sleep_temperature = (
+            temp_result.data_points[0].data if temp_result.data_points else None
+        )
+        return GoogleHealthSleepData(sleep=sleep, sleep_temperature=sleep_temperature)
 
 
 @dataclass
